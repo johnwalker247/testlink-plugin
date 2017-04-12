@@ -1,18 +1,18 @@
-/* 
+/*
  * The MIT License
- * 
+ *
  * Copyright (c) 2010 Bruno P. Kinoshita <http://www.kinoshita.eti.br>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -50,7 +50,7 @@ import hudson.util.VariableResolver;
  * @since 2.0
  */
 public final class TestLinkHelper {
-	
+
 	// Environment Variables names.
 	private static final String TESTLINK_TESTCASE_PREFIX = "TESTLINK_TESTCASE_";
 	private static final String TESTLINK_TESTPLAN_PREFIX = "TESTLINK_TESTPLAN_";
@@ -66,10 +66,10 @@ public final class TestLinkHelper {
 	private static final String TESTLINK_TESTPLAN_NAME_ENVVAR = "TESTLINK_TESTPLAN_NAME";
 	private static final String TESTLINK_TESTPROJECT_NAME_ENVVAR = "TESTLINK_TESTPROJECT_NAME";
 	private static final String TESTLINK_TESTCASE_EXTERNAL_ID_ENVVAR = "TESTLINK_TESTCASE_EXTERNAL_ID";
-
+	private static final String TESTLINK_TESTCASE_TL_JENKINS_ENVVAR = "TESTLINK_TESTCASE_TL_JENKINS";
 	// Used for HTTP basic auth
 	private static final String BASIC_HTTP_PASSWORD = "basicPassword";
-	
+
 	// For other utility methods
 	/**
      * Comma constant for custom fields separated with delimiter.
@@ -82,13 +82,13 @@ public final class TestLinkHelper {
 	private TestLinkHelper() {
 		super();
 	}
-	
+
 	/**
-	 * Retrieves the text for an execution status wrapped in html tags that add 
-	 * color to the text. Green for sucess, yellow for blocked, gray for not ran 
-	 * and red for failed. If the plug-in supports the locale the text will be 
+	 * Retrieves the text for an execution status wrapped in html tags that add
+	 * color to the text. Green for sucess, yellow for blocked, gray for not ran
+	 * and red for failed. If the plug-in supports the locale the text will be
 	 * translated automatically.
-	 * 
+	 *
 	 * @param executionStatus the execution status.
 	 * @return the text wrapped in html tags that add color to the text.
 	 */
@@ -105,11 +105,11 @@ public final class TestLinkHelper {
 		}
 		return executionStatusTextColored;
 	}
-	
+
 	/**
-	 * <p>Defines TestLink Java API Properties. Following is the list of available 
+	 * <p>Defines TestLink Java API Properties. Following is the list of available
 	 * properties.</p>
-	 * 
+	 *
 	 * <ul>
 	 *  	<li>xmlrpc.basicEncoding</li>
  	 *  	<li>xmlrpc.basicPassword</li>
@@ -123,14 +123,14 @@ public final class TestLinkHelper {
  	 *  	<li>xmlrpc.replyTimeout</li>
  	 *  	<li>xmlrpc.userAgent</li>
 	 * </ul>
-	 * 
+	 *
 	 * @param testLinkJavaAPIProperties
 	 * @param listener Jenkins Build listener
 	 */
 	public static void setTestLinkJavaAPIProperties(String testLinkJavaAPIProperties, BuildListener listener) {
 		if (StringUtils.isNotBlank(testLinkJavaAPIProperties)) {
 			final StringTokenizer tokenizer = new StringTokenizer( testLinkJavaAPIProperties, "," );
-			
+
 			if (tokenizer.countTokens() > 0) {
 				while (tokenizer.hasMoreTokens()) {
 					String systemProperty = tokenizer.nextToken();
@@ -139,10 +139,10 @@ public final class TestLinkHelper {
 			}
 		}
 	}
-	
+
 	/**
 	 * Maybe adds a system property if it is in format <key>=<value>.
-	 * 
+	 *
 	 * @param systemProperty System property entry in format <key>=<value>.
 	 * @param listener Jenkins Build listener
 	 */
@@ -151,27 +151,27 @@ public final class TestLinkHelper {
 		if (tokenizer.countTokens() == 2) {
 			final String key 	= tokenizer.nextToken();
 			final String value	= tokenizer.nextToken();
-			
+
 			if (StringUtils.isNotBlank(key) && StringUtils.isNotBlank(value)) {
 				if (key.contains(BASIC_HTTP_PASSWORD)) {
 					listener.getLogger().println(Messages.TestLinkBuilder_SettingSystemProperty(key, "********"));
 				} else {
 					listener.getLogger().println( Messages.TestLinkBuilder_SettingSystemProperty(key, value) );
 				}
-				
+
 				try {
 					System.setProperty(key, value);
 				} catch ( SecurityException se ) {
 					se.printStackTrace( listener.getLogger() );
 				}
-			
+
 			}
 		}
 	}
-	
+
 	/**
 	 * Creates a Map (name, value) of environment variables for a TestLink Test Case.
-	 * 
+	 * jwfinal String[] commaSeparatedValues = automatedTestCase.getKeyCustomFieldValues(this.keyCustomField);
 	 * @param testCase TestLink test Case.
 	 * @param testProject TestLink Test Project.
 	 * @param testPlan TestLink Test Plan.
@@ -180,7 +180,7 @@ public final class TestLinkHelper {
 	 */
 	public static Map<String, String> createTestLinkEnvironmentVariables(TestCaseWrapper testCase, TestProject testProject, TestPlan testPlan, Build build) {
 		Map<String, String> testLinkEnvVar = new HashMap<String, String>();
-		
+
 		testLinkEnvVar.put( TESTLINK_TESTCASE_ID_ENVVAR, ""+testCase.getId() );
 		testLinkEnvVar.put( TESTLINK_TESTCASE_NAME_ENVVAR, StringUtils.defaultIfEmpty(testCase.getName(), ""));
 		testLinkEnvVar.put( TESTLINK_TESTCASE_TESTSUITE_ID_ENVVAR, ""+testCase.getTestSuiteId() );
@@ -190,10 +190,16 @@ public final class TestLinkHelper {
 		testLinkEnvVar.put( TESTLINK_BUILD_NAME_ENVVAR, StringUtils.defaultIfEmpty(build.getName(), ""));
 		testLinkEnvVar.put( TESTLINK_TESTPLAN_NAME_ENVVAR, StringUtils.defaultIfEmpty(testPlan.getName(), ""));
 		testLinkEnvVar.put( TESTLINK_TESTPROJECT_NAME_ENVVAR, StringUtils.defaultIfEmpty(testProject.getName(), ""));
-                testLinkEnvVar.put( TESTLINK_TESTCASE_EXTERNAL_ID_ENVVAR, StringUtils.defaultIfEmpty(testCase.getFullExternalId(), ""));
+        testLinkEnvVar.put( TESTLINK_TESTCASE_EXTERNAL_ID_ENVVAR, StringUtils.defaultIfEmpty(testCase.getFullExternalId(), ""));
+
 
 		List<CustomField> testCaseCustomFields = testCase.getCustomFields();
+
+		testLinkEnvVar.put( TESTLINK_TESTCASE_TL_JENKINS_ENVVAR, StringUtils.defaultIfEmpty(testCaseCustomFields.get(0).getValue(), ""));
+
 		for (CustomField customField : testCaseCustomFields) {
+			System.out.print("debug 1:");
+			System.out.print(customField.getValue());
 			addCustomFieldEnvironmentVariableName(customField, testLinkEnvVar, TESTLINK_TESTCASE_PREFIX);
 		}
 
@@ -208,16 +214,16 @@ public final class TestLinkHelper {
 		for (TestCaseStep step : steps) {
 			String action = step.getActions();
 			testLinkEnvVar.put(TESTLINK_TESTCASE_STEP_PREFIX + step.getNumber() + "_ACTION", action);
-			
+
 			String expected = step.getExpectedResults();
 			testLinkEnvVar.put(TESTLINK_TESTCASE_STEP_PREFIX + step.getNumber() + "_EXPECTED", expected);
 		}
 		return testLinkEnvVar;
 	}
-	
+
 	/**
      * Creates a Map (name, value) of environment variables for a TestLink Test Case.
-     * 
+     *
      * @param testProject TestLink Test Project.
      * @param testPlan TestLink Test Plan.
      * @param build TestLink Build.
@@ -225,50 +231,50 @@ public final class TestLinkHelper {
      */
     public static Map<String, String> createTestLinkEnvironmentVariables(int numberOfTests, TestProject testProject, TestPlan testPlan, Build build) {
         Map<String, String> testLinkEnvVar = new HashMap<String, String>();
-        
+
         testLinkEnvVar.put(TESTLINK_BUILD_NAME_ENVVAR, StringUtils.defaultIfEmpty(build.getName(), ""));
         testLinkEnvVar.put(TESTLINK_TESTPLAN_NAME_ENVVAR, StringUtils.defaultIfEmpty(testPlan.getName(), ""));
         testLinkEnvVar.put(TESTLINK_TESTPROJECT_NAME_ENVVAR, StringUtils.defaultIfEmpty(testProject.getName(), ""));
-        
+
         testLinkEnvVar.put(TESTLINK_TESTCASE_PREFIX + "TOTAL", Integer.toString(numberOfTests));
         return testLinkEnvVar;
     }
-	
+
 	/**
-	 * <p>Formats a custom field into an environment variable. It appends 
+	 * <p>Formats a custom field into an environment variable. It appends
 	 * the ${prefix} in front of the environment variable name.</p>
-	 * 
+	 *
 	 * <p>So, for example, the custom field which name is Sample  Custom Field,
 	 * value is <b>Sample Value</b>, and prefix is TESTLINK_TESTCASE. It will be added into the environment variables
 	 * as TESTLINK_TESTCASE_SAMPLE__CUSTOM_FIELD="Sample Value" (note for the double spaces).</p>
-	 * 
+	 *
 	 * <p>If the custom's value contains commas (,), then this method splits the
 	 * value and, for each token found, it creates a new environment variable
 	 * appending a numeric index after its name</p>
-	 * 
-	 * <p>So, for example, the custom field which name is Sample Custom Field, 
+	 *
+	 * <p>So, for example, the custom field which name is Sample Custom Field,
 	 * value is <b>Sample Value 1, Sample Value 2</b>, and prefix is TESTLINK_TESTCASE. It will generate three
 	 * environment variables: TESTLINK_TESTCASE_SAMPLE_CUSTOM_FIELD="Sample Value 1, Sample Value 2",
 	 * TESTLINK_TESTCASE_SAMPLE_CUSTOM_FIELD_0="Sample Value 1" and
-	 * TESTLINK_TESTCASE_SAMPLE_CUSTOM_FIELD_1="Sample Value 2".</p> 
-	 * 
+	 * TESTLINK_TESTCASE_SAMPLE_CUSTOM_FIELD_1="Sample Value 2".</p>
+	 *
 	 * @param customField The custom field
 	 * @param testLinkEnvVar TestLink envVars
 	 * @param prefix the variables name prefix
 	 */
 	public static void addCustomFieldEnvironmentVariableName(CustomField customField, Map<String,
-	        String> testLinkEnvVar, String prefix) 
+	        String> testLinkEnvVar, String prefix)
 	{
 		String customFieldName = customField.getName();
 		String customFieldValue = customField.getValue();
-		
+
 		customFieldName = customFieldName.toUpperCase(); // uppercase
 		customFieldName = customFieldName.trim(); // trim
 		customFieldName = prefix + customFieldName; // add prefix
 		customFieldName = customFieldName.replaceAll( "\\s+", "_" ); // replace white spaces
-		
+
 		testLinkEnvVar.put(customFieldName, customFieldValue);
-		
+
 		if (StringUtils.isNotBlank( customFieldValue )) {
 			StringTokenizer tokenizer = new StringTokenizer(customFieldValue, ",");
 			if (tokenizer.countTokens() > 1) {
@@ -276,14 +282,14 @@ public final class TestLinkHelper {
 				while (tokenizer.hasMoreTokens()) {
 					String token = tokenizer.nextToken();
 					token = token.trim();
-					
+
 					customFieldName = customField.getName();
 					customFieldName = customFieldName.toUpperCase(); // uppercase
 					customFieldName = customFieldName.trim(); // trim
-					
+
 					String tokenName = prefix + customFieldName + "_" + index; // add prefix
 					tokenName = tokenName.replaceAll( "\\s+", "_" ); // replace white spaces
-					
+
 					testLinkEnvVar.put(tokenName, token);
 					++index;
 				}
@@ -293,7 +299,7 @@ public final class TestLinkHelper {
 
 	/**
 	 * Creates EnvVars for a TestLink Test Case.
-	 * 
+	 *
 	 * @param testCase TestLink test Case
 	 * @param testProject TestLink Test Project
 	 * @param testPlan TestLink Test Plan
@@ -309,10 +315,10 @@ public final class TestLinkHelper {
 		final EnvVars buildEnvironment = new EnvVars( testLinkEnvironmentVariables );
 		return buildEnvironment;
 	}
-	
+
 	/**
      * Creates EnvVars for TestLink entities.
-     * 
+     *
      * @param numberOfTests number of tests
      * @param testProject TestLink Test Project
      * @param testPlan TestLink Test Plan
@@ -328,10 +334,10 @@ public final class TestLinkHelper {
         final EnvVars buildEnvironment = new EnvVars( testLinkEnvironmentVariables );
         return buildEnvironment;
     }
-	
+
 	/**
 	 * Creates Report Summary.
-	 * 
+	 *
 	 * @param testLinkReport TestLink Report
 	 * @param previous Previous TestLink Report
 	 * @return Report Summary
@@ -341,7 +347,7 @@ public final class TestLinkHelper {
 		builder.append("<p><b>"+Messages.ReportSummary_Summary_BuildID(testLinkReport.getBuildId())+"</b></p>");
 		builder.append("<p><b>"+Messages.ReportSummary_Summary_BuildName(testLinkReport.getBuildName())+"</b></p>");
 		builder.append("<p><a href=\"" + TestLinkBuildAction.URL_NAME + "\">");
-		
+
 		Integer total = testLinkReport.getTestsTotal();
 		Integer previousTotal = previous != null ? previous.getTestsTotal() : total;
 		Integer passed = testLinkReport.getPassed();
@@ -352,23 +358,23 @@ public final class TestLinkHelper {
 		Integer previousBlocked = previous != null ? previous.getBlocked() : blocked;
 		Integer notRun = testLinkReport.getNotRun();
 		Integer previousNotRun = previous != null ? previous.getNotRun() : notRun;
-		
+
 		builder.append( Messages.ReportSummary_Summary_Text(
-			 total + getPlusSignal(total, previousTotal), 
-			 passed + getPlusSignal(passed, previousPassed), 
-			 failed + getPlusSignal(failed, previousFailed), 
-			 blocked + getPlusSignal(blocked, previousBlocked), 
+			 total + getPlusSignal(total, previousTotal),
+			 passed + getPlusSignal(passed, previousPassed),
+			 failed + getPlusSignal(failed, previousFailed),
+			 blocked + getPlusSignal(blocked, previousBlocked),
 			 notRun + getPlusSignal(notRun, previousNotRun)
 		) );
-		
+
         builder.append("</p>");
-		
+
 		return builder.toString();
 	}
 
 	/**
 	 * Creates detailed Report Summary.
-	 * 
+	 *
 	 * @param report TestLink report
 	 * @param previous Previous TestLink report
 	 * @return Detailed Report Summary
@@ -391,31 +397,31 @@ public final class TestLinkHelper {
 		builder.append("</th><th>");
 		builder.append(Messages.ReportSummary_Details_ExecutionStatus());
 		builder.append("</th></tr>\n");
-		
+
         for(TestCaseWrapper tc: report.getTestCases() )
         {
         	builder.append("<tr>\n");
-        	
+
         	builder.append("<td>"+tc.getId()+"</td>");
         	builder.append("<td>"+tc.getFullExternalId()+"</td>");
         	builder.append("<td>"+tc.getVersion()+"</td>");
         	builder.append("<td>"+tc.getName()+"</td>");
         	builder.append("<td>"+tc.getTestProjectId()+"</td>");
     		builder.append("<td>"+TestLinkHelper.getExecutionStatusTextColored( tc.getExecutionStatus() )+"</td>\n");
-        	
+
         	builder.append("</tr>\n");
         }
-        
+
         builder.append("</table>");
         return builder.toString();
 	}
 
-	
+
 
 	/**
-	 * Prints the difference between two int values, showing a plus sign if the 
-	 * current number is greater than the previous. 
-	 * 
+	 * Prints the difference between two int values, showing a plus sign if the
+	 * current number is greater than the previous.
+	 *
 	 * @param current Current value
 	 * @param previous Previous value
 	 */
